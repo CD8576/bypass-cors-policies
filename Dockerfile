@@ -1,16 +1,19 @@
-# specify the node base image with your desired version node:<version>
-FROM node:18-alpine
+FROM node:20-slim AS base
+ENV PNPM_HOME="/pnpm"
+ENV PATH="$PNPM_HOME:$PATH"
+RUN corepack enable
+COPY . /app
+WORKDIR /app
 
-ARG NODE_ENV=production
+FROM base AS prod-deps
+RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --prod --frozen-lockfile
 
-WORKDIR /usr/src/app
+FROM base AS build
+RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --frozen-lockfile
+RUN pnpm run build
 
-
-COPY . .
-
-RUN npm ci
-
-EXPOSE 3000
-
-# Start cron service and your application
-CMD npm start
+FROM base
+COPY --from=prod-deps /app/node_modules /app/node_modules
+COPY --from=build /app/dist /app/dist
+EXPOSE 8000
+CMD [ "pnpm", "start" ]
