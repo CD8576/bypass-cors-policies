@@ -4,7 +4,7 @@ services:
   bypass-cors-policies:
     image: miorey/bypass-cors-policies
     environment:
-      - SERVER_NAME=https://play.blooket.com/play
+      - SERVER_NAME=https://www.blooket.com/
     volumes:
       - ./storage:/usr/src/app/storage
     ports:
